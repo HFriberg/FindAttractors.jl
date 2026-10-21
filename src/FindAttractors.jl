@@ -146,9 +146,10 @@ bounds. Call from thread 1 outside another threaded loop; interrupts wait for a 
 """
 function find_attractors(next_value::F, max_input::B, starts::AbstractRange{T};
                         extended_type::Type{W}=T, log_iter_freq=10_000,
-                        log_time_freq=2, on_batch::C=report_batch) where {F,B,T,W,C}
+                        log_time_freq=2, max_time=Inf, on_batch::C=report_batch) where {F,B,T,W,C}
     validate_inputs(max_input, starts, T, W, log_iter_freq, log_time_freq)
     start_time = time()
+    elapsed = 0.0
     count = length(starts)
     count == 0 && return SearchSummary(count, 0, 0, time() - start_time)
 
@@ -163,7 +164,7 @@ function find_attractors(next_value::F, max_input::B, starts::AbstractRange{T};
     initial = Float64(log_time_freq) * log_iter_freq * Threads.nthreads()
     batch_size = max(1, floor(Int, min(Float64(max_batch), initial)))
 
-    while true
+    while elapsed <= max_time
         batch_count = Int(min(batch_size, count - batch_start + 1))
         batch_end = batch_start + (batch_count - 1)
         batch_range = T(starts[batch_start]):step(starts):T(starts[batch_end])
@@ -172,10 +173,11 @@ function find_attractors(next_value::F, max_input::B, starts::AbstractRange{T};
             search_batch!(next_value, max_input, batch_range, cycle_from, cycle_to, overflow)
         end
         batch_time = time() - batch_start_time
+        elapsed = time() - start_time
         cycle_count += sum(length, cycle_from)
         overflow_count += sum(length, overflow)
         on_batch(AttractorBatch(batch_range, cycle_from, cycle_to, overflow,
-                              time() - start_time, batch_time))
+                              elapsed, batch_time))
         for thread_id in 1:thread_count
             empty!(cycle_from[thread_id])
             empty!(cycle_to[thread_id])
@@ -186,7 +188,9 @@ function find_attractors(next_value::F, max_input::B, starts::AbstractRange{T};
         target = (log_time_freq / max(batch_time, eps(Float64))) * batch_size
         batch_size = max(1, round(Int, min(Float64(max_batch), 10.0 * batch_size, target)))
     end
-    return SearchSummary(count, cycle_count, overflow_count, time() - start_time)
+
+    elapsed = time() - start_time
+    return SearchSummary(count, cycle_count, overflow_count, elapsed)
 end
 
 end

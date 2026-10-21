@@ -19,11 +19,11 @@ function main(args=ARGS)
     T = UInt64
     
     A, B = parse.(T, args[1:2])
+    my_next_value, my_max_input = bind_coefficients(Val(A), Val(B))
+    
     args = args[3:end]
     stop = isempty(args) ? T(1_000_000) : parse(T, only(args))
     starts = T(1):T(2):stop
-    
-    my_next_value, my_max_input = bind_coefficients(Val(A), Val(B))
 
     summary = find_attractors(my_next_value, my_max_input, starts; extended_type=UInt128)
     println("Tested ", summary.processed, " starts in ", summary.elapsed, " seconds; ",
