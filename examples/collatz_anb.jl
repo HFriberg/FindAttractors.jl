@@ -1,4 +1,4 @@
-module Collatz3n1
+module Collatzanb
 
 using FindAttractors
 
