@@ -12,7 +12,6 @@ julia --project=. --threads=8 examples/collatz_5n3.jl 1000000
 
 The examples use odd-to-odd rules. `collatz_3n1.jl` tests `3:4:stop`;
 `collatz_5n3.jl` tests `1:2:stop`. The default stop is 1,000,000.
-Each file is self-contained and can also be included without running a search.
 
 ## API
 
