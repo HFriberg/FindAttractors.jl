@@ -1,3 +1,7 @@
+authors = [
+  "Henrik Alsing Friberg <metronware@gmail.com>",
+]
+
 name = "FindAttractors"
 uuid = "eba582be-d82a-4f8a-9c79-91d827e9cf54"
 version = "0.2.0"
