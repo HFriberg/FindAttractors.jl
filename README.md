@@ -1,6 +1,6 @@
 # FindAttractors.jl
 
-Cycle-entry and overflow detection for nonnegative integer sequences. Julia 1.10+;
+Cycle and overflow detection for nonnegative integer sequences. Julia 1.10+;
 no external dependencies.
 
 ## Examples
