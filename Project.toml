@@ -1,12 +1,13 @@
-authors = [
-  "Henrik Alsing Friberg <metronware@gmail.com>",
-]
-
 name = "FindAttractors"
 uuid = "eba582be-d82a-4f8a-9c79-91d827e9cf54"
 version = "0.2.0"
+authors = ["Henrik Alsing Friberg <metronware@gmail.com>"]
+
+[deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 
 [compat]
+ArgParse = "1.2.0"
 julia = "1.10"
 
 [extras]

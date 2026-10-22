@@ -1,6 +1,9 @@
 module FindAttractors
 
 export find_attractors, AttractorBatch, SearchSummary, report_batch
+export cli_parseint, CLIInt, cli_settings
+
+using ArgParse
 
 """
 Batch results: `starts`, per-thread `cycle_from`, `cycle_to`, and `overflow`,
@@ -21,6 +24,42 @@ struct SearchSummary{N}
     cycles::Int
     overflow::Int
     elapsed::Float64
+end
+
+function cli_parseint(::Type{T}, str::AbstractString) where T<:Integer
+    str == "max" && return typemax(T)
+    str = replace(str, "_" => "")           # allow 1_000_000
+    value = BigFloat(str; precision=256)    # allow 1e9
+    return T(value)
+end
+
+struct CLIInt{T<:Integer}
+    value::T
+end
+
+CLIInt{T}(str::AbstractString) where {T<:Integer} = CLIInt{T}(cli_parseint(T, str))
+
+function cli_settings(T)
+    settings = ArgParseSettings(
+        description = "Search for attractors on integer sequence."
+    )
+
+    @add_arg_table! settings begin
+        "--from"
+            help = "first integer to test"
+            arg_type = CLIInt{T}
+            default = T(1)
+        "--to"
+            help = "last integer to test or 'max'"
+            arg_type = CLIInt{T}
+            default = T(1_000_000)
+        "--maxtime"
+            help = "time limit"
+            arg_type = Float64
+            default = Inf
+    end
+
+    return settings
 end
 
 function trace_orbit(next_value::F, max_input::B, value::T, lower_bound::T) where {F,B,T}
@@ -146,7 +185,7 @@ bounds. Call from thread 1 outside another threaded loop; interrupts wait for a 
 """
 function find_attractors(next_value::F, max_input::B, starts::AbstractRange{T};
                         extended_type::Type{W}=T, log_iter_freq=10_000,
-                        log_time_freq=2, max_time=Inf, on_batch::C=report_batch) where {F,B,T,W,C}
+                        log_time_freq=2, maxtime=Inf, on_batch::C=report_batch) where {F,B,T,W,C}
     validate_inputs(max_input, starts, T, W, log_iter_freq, log_time_freq)
     start_time = time()
     elapsed = 0.0
@@ -164,7 +203,7 @@ function find_attractors(next_value::F, max_input::B, starts::AbstractRange{T};
     initial = Float64(log_time_freq) * log_iter_freq * Threads.nthreads()
     batch_size = max(1, floor(Int, min(Float64(max_batch), initial)))
 
-    while elapsed <= max_time
+    while elapsed <= maxtime
         batch_count = Int(min(batch_size, count - batch_start + 1))
         batch_end = batch_start + (batch_count - 1)
         batch_range = T(starts[batch_start]):step(starts):T(starts[batch_end])
